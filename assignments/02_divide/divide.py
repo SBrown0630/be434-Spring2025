@@ -6,7 +6,7 @@ Purpose: Divide two numbers
 """
 
 import argparse
-
+import sys
 
 # --------------------------------------------------
 def get_args():
@@ -32,9 +32,11 @@ def main():
 
     args = get_args()
     numbers = args.numbers
-  
+
+    
     if numbers[1] == 0:
-        print('Cannot divide by zero, dum-dum!')
+        print(f'usage: {sys.argv[0]} [-h] INT INT\nCannot divide by zero, dum-dum!', file=sys.stderr)
+        sys.exit(1)
     else:
         divided = numbers[0] // numbers[1]
         print(f'{numbers[0]} / {numbers[1]} = {divided}')
