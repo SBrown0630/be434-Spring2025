@@ -19,41 +19,46 @@ def get_args():
     parser.add_argument('file',
                         metavar='FILE',
                         help='Input sequence file',
-                        nargs=1,
+                        nargs='*',
                         type=argparse.FileType('r'),
                         default=[sys.stdin])
 
-    
     return parser.parse_args()
-
-
 # --------------------------------------------------
 def main():
     """Make a jazz noise here"""
-args = get_args()
+    args = get_args()
+    max_gc_id = ''
+    max_gc_content = -1.0
 
-sequence_id = ''
-sequence = ''
-max_gc_content = -1
-max_gc_id = ''
+    for fh in args.file:
+        sequence_id = None
+        sequence = []
 
-for line in args.file:
-    line = line.rstrip()
-    if line.startswith('>'):
-        gc_content = (sequence.count('G') + sequence.count('C')) / len(sequence) * 100
-        if gc_content > max_gc_content:
-            max_gc_content = gc_content
-            max_gc_id = sequence_id
-        sequence_id = line[1:]  
-        sequence = ''
-    else:
-        sequence += line  
-gc_content = (sequence.count('G') + sequence.count('C')) / len(sequence)
-if gc_content > max_gc_content:
-        max_gc_content = gc_content
-        max_gc_id = sequence_id
-# Print the result
-print(f'{max_gc_id} {max_gc_content:.6f}')
+        for line in fh:
+            line = line.strip()
+            if line.startswith('>'):
+                if sequence_id is not None:
+                    full_sequence = ''.join(sequence)
+                    gc_content = ((full_sequence.count('G') + full_sequence.count('C')) / len(full_sequence)) * 100 if sequence else 0
+                    if gc_content > max_gc_content:
+                        max_gc_id = sequence_id
+                        max_gc_content = gc_content
+                sequence_id = line[1:]
+                sequence = []
+            else:
+                sequence.append(line)
+
+        if sequence_id is not None:
+            full_sequence = ''.join(sequence)
+            gc_content = ((full_sequence.count('G') + full_sequence.count('C')) / len(full_sequence)) * 100 if sequence else 0
+            if gc_content > max_gc_content:
+                max_gc_id = sequence_id
+                max_gc_content = gc_content
+
+    if max_gc_id:
+        print(f'{max_gc_id} {max_gc_content:.6f}')
 # --------------------------------------------------
 if __name__ == '__main__':
     main()
+    
