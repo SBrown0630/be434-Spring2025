@@ -7,7 +7,7 @@ Purpose: Transcribe DNA to RNA
 
 import argparse
 import os
-import sys
+#import sys
 
 
 # --------------------------------------------------
@@ -18,11 +18,11 @@ def get_args():
         description='Transcribe DNA to RNA',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('file',
-                        metavar='FILE',
+    parser.add_argument('files',
+                        metavar='FILES',
                         nargs='+',
-                        type=argparse.FileType('r'),
-                        help='Input DNA file')
+                        type=argparse.FileType('rt'),
+                        help='Input DNA file(s)')
 
     parser.add_argument('-o',
                         '--outdir',
@@ -33,8 +33,8 @@ def get_args():
 
     args = parser.parse_args()
                     
-    if os.path.isfile(args.file):
-        args.file = open(args.file).read().rstrip()
+    #if os.path.isfile(args.file):
+    #    args.file = open(args.file).read().rstrip()
 
     return args
 
@@ -44,14 +44,34 @@ def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    dna = args.file
-    outdir = open(args.outdir, 'wt') if args.outdir else sys.stdout
-    rna = ''
-                    
-    for T in dna:
-        rna = dna.replace('T', 'U')
-    outdir.write(rna)
-    outdir.close()
+    
+    if not os.path.isdir(args.outdir):
+        os.makedirs(args.outdir)
+
+
+    num_seqs = 0
+    num_files = 0
+    for file in args.files:
+        num_files += 1
+        out_file = os.path.join(args.outdir,  os.path.basename(file.name))
+        out_fh = open(out_file, 'wt')
+        
+        for dna in file:
+           num_seqs += 1
+           out_fh.write(dna.replace('T', 'U'))
+        out_fh.close()
+
+    print(f'Done, wrote {num_seqs} sequence{"" if num_seqs == 1 else "s"} '
+          f'in {num_files} file{"" if num_files == 1 else "s"} '
+          f'to directory "{args.outdir}".')
+    #seq_text = "sequence"
+    #file_text = "file"
+    #if num_seqs > 1:
+    #    seq_text = "sequences"
+    #if num_files > 1:
+    #    file_text = "files"
+
+    #print(f'Done, wrote {num_seqs} {seq_text} in {num_files} {file_text} to directory "{args.outdir}".')
 
 
 
