@@ -6,6 +6,10 @@ Purpose: Create WOD
 """
 
 import argparse
+import csv
+import random
+from pprint import pprint
+from tabulate import tabulate
 
 
 # --------------------------------------------------
@@ -26,7 +30,7 @@ def get_args():
     parser.add_argument('-n',
                         '--num',
                         help='Number of exercises',
-                        metavar='int',
+                        metavar='num',
                         type=int,
                         default=4)
 
@@ -42,7 +46,12 @@ def get_args():
                         help='Halve the reps',
                         action='store_true')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.num < 1:
+        parser.error(f'--num "{args.num}" must be greater than 0')
+
+    return args
 
 
 # --------------------------------------------------
@@ -50,8 +59,29 @@ def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    print(args.file.name)
+    random.seed(args.seed)
+    exercises = read_csv(args.file)
+    wod = []
+    for exercise, low, high in random.sample(exercises, k=args.num):
+        reps = random.randint(low, high)
+        if args.easy:
+            reps = int(reps / 2)
+        wod.append((exercise, reps))
 
+    print(tabulate(wod, headers=('Exercise', 'Reps')))
+# --------------------------------------------------
+def read_csv(fh):
+    """Read the csv input"""
+
+    reader = csv.DictReader(fh, delimiter=',')
+    exercises = [] 
+    for rec in reader:
+        name, reps = rec['exercise'], rec['reps']
+        if name and reps:
+            low, high = map(int, reps.split('-'))
+            exercises.append((name, low, high))
+                    
+    return exercises
 # --------------------------------------------------
 if __name__ == '__main__':
     main()
